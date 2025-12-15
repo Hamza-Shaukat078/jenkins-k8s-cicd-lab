@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: library-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: library-web
+  template:
+    metadata:
+      labels:
+        app: library-web
+    spec:
+      containers:
+        - name: library-web
+          image: <YOUR_DOCKERHUB_USERNAME>/library-web:latest
+          ports:
+            - containerPort: 3000

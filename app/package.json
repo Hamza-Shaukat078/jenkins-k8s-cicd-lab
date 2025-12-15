@@ -1,0 +1,13 @@
+{
+  "name": "library-app",
+  "version": "1.0.0",
+  "description": "Library Book Management Web App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.5.0"
+  }
+}
