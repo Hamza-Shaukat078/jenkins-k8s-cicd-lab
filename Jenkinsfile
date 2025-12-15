@@ -8,18 +8,35 @@ pipeline {
 
     stages {
 
-        stage("Docker Build") {
+        /* ============================
+           1. CODE FETCH STAGE
+           ============================ */
+        stage("Code Fetch Stage") {
             steps {
-                sh "docker build -t $IMAGE_NAME:latest app"
+                echo "Source code fetched automatically from GitHub using SCM"
             }
         }
 
-        stage("Docker Push") {
+        /* ============================
+           2. DOCKER IMAGE CREATION
+           ============================ */
+        stage("Docker Image Creation Stage") {
+            steps {
+                sh """
+                docker build -t $IMAGE_NAME:latest app
+                """
+            }
+        }
+
+        /* ============================
+           3. DOCKER IMAGE PUSH
+           ============================ */
+        stage("Docker Image Push Stage") {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: DOCKER_CREDS,
-                    usernameVariable: "DOCKER_USER",
-                    passwordVariable: "DOCKER_PASS"
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh """
                     echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
@@ -29,7 +46,10 @@ pipeline {
             }
         }
 
-        stage("Kubernetes Deployment") {
+        /* ============================
+           4. KUBERNETES DEPLOYMENT
+           ============================ */
+        stage("Kubernetes Deployment Stage") {
             steps {
                 sh """
                 kubectl apply -f k8s/mongo-deployment.yaml
@@ -40,10 +60,31 @@ pipeline {
             }
         }
 
-        stage("Monitoring") {
+        /* ============================
+           5. PROMETHEUS / GRAFANA STAGE
+           ============================ */
+        stage("Prometheus / Grafana Stage") {
             steps {
-                sh "echo Prometheus and Grafana will monitor the application"
+                sh """
+                helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+                helm repo update
+
+                kubectl create namespace monitoring || true
+
+                helm upgrade --install prometheus kube-prometheus-stack \
+                  --repo https://prometheus-community.github.io/helm-charts \
+                  --namespace monitoring
+                """
             }
+        }
+    }
+
+    post {
+        success {
+            echo "CI/CD Pipeline completed successfully"
+        }
+        failure {
+            echo "CI/CD Pipeline failed"
         }
     }
 }
