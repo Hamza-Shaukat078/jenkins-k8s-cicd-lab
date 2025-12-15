@@ -8,13 +8,6 @@ pipeline {
 
     stages {
 
-        stage("Code Fetch") {
-            steps {
-                git credentialsId: "github-creds",
-                    url: "https://github.com/Hamza-Shaukat078/jenkins-k8s-cicd-lab.git"
-            }
-        }
-
         stage("Docker Build") {
             steps {
                 sh "docker build -t $IMAGE_NAME:latest app"
