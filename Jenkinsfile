@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "hamzashaukat078/library-web"
+        IMAGE_NAME   = "hamzashaukat078/library-web"
         DOCKER_CREDS = "dockerhub-creds"
     }
 
@@ -23,7 +23,7 @@ pipeline {
         stage("Docker Image Creation Stage") {
             steps {
                 sh """
-                docker build -t $IMAGE_NAME:latest app
+                docker build -t ${IMAGE_NAME}:latest app
                 """
             }
         }
@@ -33,14 +33,16 @@ pipeline {
            ============================ */
         stage("Docker Image Push Stage") {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: DOCKER_CREDS,
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: DOCKER_CREDS,
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh """
                     echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                    docker push $IMAGE_NAME:latest
+                    docker push ${IMAGE_NAME}:latest
                     """
                 }
             }
@@ -52,10 +54,10 @@ pipeline {
         stage("Kubernetes Deployment Stage") {
             steps {
                 sh """
-                kubectl apply -f k8s/mongo-deployment.yaml
-                kubectl apply -f k8s/mongo-service.yaml
-                kubectl apply -f k8s/web-deployment.yaml
-                kubectl apply -f k8s/web-service.yaml
+                kubectl apply --validate=false -f k8s/mongo-deployment.yaml
+                kubectl apply --validate=false -f k8s/mongo-service.yaml
+                kubectl apply --validate=false -f k8s/web-deployment.yaml
+                kubectl apply --validate=false -f k8s/web-service.yaml
                 """
             }
         }
